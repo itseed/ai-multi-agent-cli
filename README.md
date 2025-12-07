@@ -81,10 +81,17 @@ node orchestrator.js
 
 Pipeline จะสร้างไฟล์ต่อไปนี้:
 
+**Status File** (อยู่ใน orchestrator directory):
+- `ai_status.json` - สถานะของแต่ละ agent
+
+**Documentation Files** (ขึ้นอยู่กับการตั้งค่า `DOCS_IN_TARGET_PROJECT`):
 - `docs/AI_PLAN.md` - แผนระบบจาก Planner
 - `docs/AI_TEST_REPORT.md` - รายงานผลการทดสอบจาก Tester
 - `docs/AI_REVIEW.md` - รีวิวโค้ดจาก Reviewer
+
+**Code Files** (อยู่ใน target project):
 - `src/**` - โค้ดที่ Implementer สร้าง
+- `tests/**` - Tests ที่ Tester สร้าง
 
 ## ⚙️ Configuration
 
@@ -159,6 +166,8 @@ agents: {
 | `REVIEWER_TIMEOUT_MS` | Timeout ใน milliseconds | `3600000` |
 | `REVIEW_LOOP_ENABLED` | เปิด/ปิด review loop | `true` |
 | `REVIEW_LOOP_MAX_LOOPS` | จำนวนรอบสูงสุด | `3` |
+| `TARGET_PROJECT_ROOT` | Directory ที่จะสร้าง code | `` (current dir) |
+| `DOCS_IN_TARGET_PROJECT` | เก็บ docs ใน target project (`true`) หรือ orchestrator dir (`false`) | `false` |
 
 ### System Prompts
 

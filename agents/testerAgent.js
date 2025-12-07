@@ -1,9 +1,9 @@
 // agents/testerAgent.js
 const fs = require('fs');
 const path = require('path');
-const { PLAN_FILE, TEST_REPORT_FILE, ROOT_DIR } = require('../lib/paths');
+const { PLAN_FILE, TEST_REPORT_FILE, TARGET_PROJECT_ROOT } = require('../lib/paths');
 const { readStatus, setStatus } = require('../lib/status');
-const { runCommand } = require('../lib/runCommand');
+const { runAgentCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
 
 const cfg = agents.tester;
@@ -22,7 +22,7 @@ async function runTesterIfNeeded() {
 ${cfg.systemPrompt}
 
 ข้อมูลโปรเจกต์:
-- โปรเจกต์อยู่ที่: ${ROOT_DIR}
+- โปรเจกต์ที่จะสร้าง code อยู่ที่: ${TARGET_PROJECT_ROOT}
 - แผนระบบ: ${PLAN_FILE}
 - ไฟล์รายงานผลการทดสอบ: ${TEST_REPORT_FILE}
 
@@ -35,7 +35,7 @@ ${cfg.systemPrompt}
 `.trim();
 
   try {
-    await runCommand(cfg.command, cfg.defaultArgs, prompt, {
+    await runAgentCommand(cfg.id, cfg.command, cfg.defaultArgs, prompt, {
       timeout: cfg.timeoutMs,
     });
 

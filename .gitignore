@@ -26,3 +26,6 @@ Thumbs.db
 *.tmp
 .cache/
 
+
+# Logs
+logs/

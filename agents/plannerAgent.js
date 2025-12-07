@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { PLAN_FILE } = require('../lib/paths');
 const { readStatus, setStatus } = require('../lib/status');
-const { runCommand } = require('../lib/runCommand');
+const { runAgentCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
 
 const cfg = agents.planner;
@@ -34,7 +34,7 @@ ${cfg.systemPrompt}
 `.trim();
 
   try {
-    await runCommand(cfg.command, cfg.defaultArgs, prompt, {
+    await runAgentCommand(cfg.id, cfg.command, cfg.defaultArgs, prompt, {
       timeout: cfg.timeoutMs,
     });
 

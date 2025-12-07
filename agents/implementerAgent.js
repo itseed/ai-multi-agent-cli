@@ -1,8 +1,8 @@
 // agents/implementerAgent.js
 const fs = require('fs');
-const { PLAN_FILE, REVIEW_FILE, ROOT_DIR } = require('../lib/paths');
+const { PLAN_FILE, REVIEW_FILE, TARGET_PROJECT_ROOT } = require('../lib/paths');
 const { readStatus, setStatus } = require('../lib/status');
-const { runCommand } = require('../lib/runCommand');
+const { runAgentCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
 
 const cfg = agents.implementer;
@@ -25,7 +25,7 @@ async function runImplementerIfNeeded() {
 ${cfg.systemPrompt}
 
 ข้อมูลเพิ่มเติม:
-- โปรเจ็กต์อยู่ที่: ${ROOT_DIR}
+- โปรเจ็กต์ที่จะสร้าง code อยู่ที่: ${TARGET_PROJECT_ROOT}
 - ไฟล์แผนหลัก: ${PLAN_FILE}
 - ถ้ามีไฟล์รีวิวอยู่แล้ว: ${REVIEW_FILE} (ให้ใช้เป็น reference ในการปรับปรุงโค้ด)
 
@@ -33,7 +33,7 @@ ${cfg.systemPrompt}
 `.trim();
 
   try {
-    await runCommand(cfg.command, cfg.defaultArgs, prompt, {
+    await runAgentCommand(cfg.id, cfg.command, cfg.defaultArgs, prompt, {
       timeout: cfg.timeoutMs,
     });
 
@@ -69,7 +69,7 @@ ${cfg.systemPrompt}
 `.trim();
 
   try {
-    await runCommand(cfg.command, cfg.defaultArgs, prompt, {
+    await runAgentCommand(cfg.id, cfg.command, cfg.defaultArgs, prompt, {
       timeout: cfg.timeoutMs,
     });
 

@@ -1,70 +1,119 @@
 #!/usr/bin/env bash
 
-SESSION_NAME="ai-agents"
+##############################################
+# Load .env
+##############################################
 
-# Load environment variables from .env if exists
-if [ -f .env ]; then
-  export $(cat .env | grep -v '^#' | xargs)
+# ตรวจว่ามีไฟล์ .env ในโปรเจ็กต์หรือไม่
+if [ -f ".env" ]; then
+  export $(grep -v '^#' .env | xargs)
+else
+  echo "[WARN] .env not found. Using default environment."
 fi
 
-# Use TARGET_PROJECT_ROOT if set, otherwise use current directory
-PROJECT_DIR="${TARGET_PROJECT_ROOT:-$(pwd)}"
+##############################################
+# Resolve project root
+##############################################
 
-# Use environment variables with defaults
-CMD_PLANNER="${PLANNER_COMMAND:-gemini}"
-CMD_IMPLEMENTER="${IMPLEMENTER_COMMAND:-cursor-agent}"
-CMD_TESTER="${TESTER_COMMAND:-cursor-agent}"
-CMD_REVIEWER="${REVIEWER_COMMAND:-codex}"
-
-# ตรวจสอบว่า tmux ติดตั้งแล้วหรือยัง
-if ! command -v tmux &> /dev/null; then
-  echo "ERROR: tmux is not installed."
-  echo "Please install tmux:"
-  echo "  brew install tmux"
-  echo "  or"
-  echo "  sudo apt-get install tmux  # on Ubuntu/Debian"
+if [ -z "$TARGET_PROJECT_ROOT" ]; then
+  echo "[ERROR] TARGET_PROJECT_ROOT is not set in .env"
   exit 1
 fi
 
-# ตรวจสอบว่า commands มีอยู่จริงหรือไม่ (optional warning)
-for cmd_name in "PLANNER" "IMPLEMENTER" "TESTER" "REVIEWER"; do
-  cmd_var="CMD_${cmd_name}"
-  cmd_value="${!cmd_var}"
-  if ! command -v "$cmd_value" &> /dev/null; then
-    echo "WARNING: Command '$cmd_value' (${cmd_name}) not found in PATH."
-  fi
-done
+PROJECT_DIR="$TARGET_PROJECT_ROOT"
 
+# Get orchestrator directory
+# This script should be run from orchestrator directory
+ORCHESTRATOR_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Log directory is in TARGET_PROJECT_ROOT (not orchestrator)
+LOG_DIR="$PROJECT_DIR/logs"
+
+# Create log directory if it doesn't exist
+mkdir -p "$LOG_DIR"
+
+##############################################
+# Agent CLI commands (fallback to default)
+##############################################
+
+PLANNER_CLI=${PLANNER_CLI:-gemini}
+IMPLEMENTER_CLI=${IMPLEMENTER_CLI:-cursor-agent}
+TESTER_CLI=${TESTER_CLI:-cursor-agent}
+REVIEWER_CLI=${REVIEWER_CLI:-codex}
+
+##############################################
+# Tmux session config
+##############################################
+
+SESSION_NAME="ai-agents"
+echo "[INFO] Starting tmux session: $SESSION_NAME"
+echo "[INFO] Project root: $PROJECT_DIR"
+
+# Kill session if already exists
 if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-  echo "Killing existing tmux session: $SESSION_NAME"
+  echo "[INFO] Killing existing tmux session: $SESSION_NAME"
   tmux kill-session -t "$SESSION_NAME"
 fi
 
-echo "Creating tmux session: $SESSION_NAME"
+# Enable mouse support (global and session-specific)
+tmux set-option -g mouse on 2>/dev/null || tmux set-option -g mouse-mode on 2>/dev/null
 
-tmux new-session -d -s "$SESSION_NAME" -c "$PROJECT_DIR" \
-  "echo 'Planner Agent'; echo; $CMD_PLANNER"
+##############################################
+# Pane Layout
+#
+#  ┌───────────────┬──────────────────┐
+#  │   Planner      │   Implementer    │
+#  │   (Gemini)     │   (Cursor)       │
+#  ├───────────────┼──────────────────┤
+#  │   Tester       │   Reviewer       │
+#  │ (Cursor/Test)  │   (Codex)        │
+#  └───────────────┴──────────────────┘
+##############################################
 
-tmux split-window -h -t "$SESSION_NAME:0" -c "$PROJECT_DIR" \
-  "echo 'Implementer Agent'; echo; $CMD_IMPLEMENTER"
+##############################################
+# Create session + Pane 1 (Planner)
+##############################################
+
+tmux new-session -d -s "$SESSION_NAME" -c "$ORCHESTRATOR_DIR" \
+  "clear; echo '=== Planner Agent Log (Real-time) ==='; echo 'Log: $LOG_DIR/planner.log'; echo ''; tail -n 50 -f '$LOG_DIR/planner.log' 2>/dev/null || (echo 'Waiting for log file...' && touch '$LOG_DIR/planner.log' && tail -f '$LOG_DIR/planner.log')"
+
+##############################################
+# Pane 2 (Implementer)
+##############################################
+
+tmux split-window -h -t "$SESSION_NAME:0" -c "$ORCHESTRATOR_DIR" \
+  "clear; echo '=== Implementer Agent Log (Real-time) ==='; echo 'Log: $LOG_DIR/implementer.log'; echo ''; tail -n 50 -f '$LOG_DIR/implementer.log' 2>/dev/null || (echo 'Waiting for log file...' && touch '$LOG_DIR/implementer.log' && tail -f '$LOG_DIR/implementer.log')"
+
+##############################################
+# Pane 3 (Tester)
+##############################################
 
 tmux select-pane -t "$SESSION_NAME:0.0"
-tmux split-window -v -t "$SESSION_NAME:0.0" -c "$PROJECT_DIR" \
-  "echo 'Tester Agent'; echo; $CMD_TESTER"
+tmux split-window -v -t "$SESSION_NAME:0.0" -c "$ORCHESTRATOR_DIR" \
+  "clear; echo '=== Tester Agent Log (Real-time) ==='; echo 'Log: $LOG_DIR/tester.log'; echo ''; tail -n 50 -f '$LOG_DIR/tester.log' 2>/dev/null || (echo 'Waiting for log file...' && touch '$LOG_DIR/tester.log' && tail -f '$LOG_DIR/tester.log')"
+
+##############################################
+# Pane 4 (Reviewer)
+##############################################
 
 tmux select-pane -t "$SESSION_NAME:0.1"
-tmux split-window -v -t "$SESSION_NAME:0.1" -c "$PROJECT_DIR" \
-  "echo 'Reviewer Agent'; echo; $CMD_REVIEWER"
+tmux split-window -v -t "$SESSION_NAME:0.1" -c "$ORCHESTRATOR_DIR" \
+  "clear; echo '=== Reviewer Agent Log (Real-time) ==='; echo 'Log: $LOG_DIR/reviewer.log'; echo ''; tail -n 50 -f '$LOG_DIR/reviewer.log' 2>/dev/null || (echo 'Waiting for log file...' && touch '$LOG_DIR/reviewer.log' && tail -f '$LOG_DIR/reviewer.log')"
+
+##############################################
+# Final Layout
+##############################################
 
 tmux select-layout -t "$SESSION_NAME:0" tiled
 
-# Enable mouse support for easier pane navigation
-# Try modern syntax first (tmux 2.1+), fallback to older syntax
-tmux set -g mouse on 2>/dev/null || \
-tmux set -g mouse-mode on 2>/dev/null || \
-tmux set -g mouse-utf8 on 2>/dev/null || \
-echo "Note: Could not enable mouse support (may need manual config)"
+# Ensure mouse is enabled for the session
+tmux set-option -t "$SESSION_NAME" mouse on 2>/dev/null || tmux set-option -t "$SESSION_NAME" mouse-mode on 2>/dev/null
 
-echo "Agents started in tmux session: $SESSION_NAME"
-echo "Mouse support enabled - you can click to switch panes"
+echo "[INFO] Tmux agents ready."
+echo "[INFO] Mouse support: enabled"
+echo "[INFO] Log directory: $LOG_DIR (in target project)"
+echo "[INFO] Each pane shows real-time log for its respective agent"
+echo "[INFO] Logs update automatically as orchestrator runs"
+echo "[INFO] Attach: tmux attach -t $SESSION_NAME"
+
 tmux attach -t "$SESSION_NAME"
