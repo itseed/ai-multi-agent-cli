@@ -1,7 +1,7 @@
 // agents/reviewerAgent.js
 const fs = require('fs');
 const path = require('path');
-const { PLAN_FILE, REVIEW_FILE } = require('../lib/paths');
+const { PLAN_FILE, REVIEW_FILE, ROOT_DIR } = require('../lib/paths');
 const { runCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
 
@@ -16,7 +16,7 @@ async function runReviewerOnce() {
 ${cfg.systemPrompt}
 
 ข้อมูลโปรเจกต์:
-- โปรเจกต์อยู่ที่: ${process.cwd()}
+- โปรเจกต์อยู่ที่: ${ROOT_DIR}
 - แผนระบบ: ${PLAN_FILE}
 - ไฟล์รีวิว: ${REVIEW_FILE}
 

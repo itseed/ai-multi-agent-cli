@@ -2,7 +2,20 @@
 /**
  * Orchestrator หลัก – planner -> implementer -> tester -> reviewer (+ loop แก้)
  */
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+
+let envPath = '.env'; // default
+if (process.env.TARGET_PROJECT_ROOT) {
+  const p = path.join(process.env.TARGET_PROJECT_ROOT, '.env');
+  if (fs.existsSync(p)) envPath = p;
+}
+
+dotenv.config({ path: envPath });
+
 const { readStatus, setStatus } = require('./lib/status');
+const { ROOT_DIR } = require('./lib/paths');
 const { pipeline } = require('./agents/agentConfig');
 const { runPlannerIfNeeded } = require('./agents/plannerAgent');
 const {
@@ -21,7 +34,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('Project:', process.cwd());
+  console.log('Project:', ROOT_DIR);
   console.log('Task   :', status.task);
   console.log('--------------------------------------------\n');
 

@@ -1,7 +1,7 @@
 // agents/testerAgent.js
 const fs = require('fs');
 const path = require('path');
-const { PLAN_FILE, TEST_REPORT_FILE } = require('../lib/paths');
+const { PLAN_FILE, TEST_REPORT_FILE, ROOT_DIR } = require('../lib/paths');
 const { readStatus, setStatus } = require('../lib/status');
 const { runCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
@@ -22,7 +22,7 @@ async function runTesterIfNeeded() {
 ${cfg.systemPrompt}
 
 ข้อมูลโปรเจกต์:
-- โปรเจกต์อยู่ที่: ${process.cwd()}
+- โปรเจกต์อยู่ที่: ${ROOT_DIR}
 - แผนระบบ: ${PLAN_FILE}
 - ไฟล์รายงานผลการทดสอบ: ${TEST_REPORT_FILE}
 

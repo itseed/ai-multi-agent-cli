@@ -1,6 +1,6 @@
 // agents/implementerAgent.js
 const fs = require('fs');
-const { PLAN_FILE, REVIEW_FILE } = require('../lib/paths');
+const { PLAN_FILE, REVIEW_FILE, ROOT_DIR } = require('../lib/paths');
 const { readStatus, setStatus } = require('../lib/status');
 const { runCommand } = require('../lib/runCommand');
 const { agents } = require('./agentConfig');
@@ -25,7 +25,7 @@ async function runImplementerIfNeeded() {
 ${cfg.systemPrompt}
 
 ข้อมูลเพิ่มเติม:
-- โปรเจ็กต์อยู่ที่: ${process.cwd()}
+- โปรเจ็กต์อยู่ที่: ${ROOT_DIR}
 - ไฟล์แผนหลัก: ${PLAN_FILE}
 - ถ้ามีไฟล์รีวิวอยู่แล้ว: ${REVIEW_FILE} (ให้ใช้เป็น reference ในการปรับปรุงโค้ด)
 

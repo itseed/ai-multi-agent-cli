@@ -42,9 +42,15 @@ sudo dnf install tmux
 node --version
 ```
 
-3. ติดตั้ง dependencies (ถ้ามี):
+3. ติดตั้ง dependencies:
 ```bash
 npm install
+```
+
+4. ตั้งค่า Environment Variables (แนะนำ):
+```bash
+cp .env.example .env
+# แก้ไข .env ตาม CLI tools ของคุณ
 ```
 
 ## 📖 Usage
@@ -82,9 +88,47 @@ Pipeline จะสร้างไฟล์ต่อไปนี้:
 
 ## ⚙️ Configuration
 
-แก้ไขไฟล์ `agents/agentConfig.js` เพื่อปรับแต่ง:
+### วิธีที่ 1: ใช้ Environment Variables (แนะนำ)
 
-### Agent Commands
+สร้างไฟล์ `.env` จาก `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+แก้ไขไฟล์ `.env` ตาม CLI tools ของคุณ:
+
+```bash
+# Planner Agent
+PLANNER_COMMAND=gemini
+PLANNER_ARGS=--model gemini-2.0-pro
+PLANNER_TIMEOUT_MS=3600000
+
+# Implementer Agent
+IMPLEMENTER_COMMAND=cursor-agent
+IMPLEMENTER_ARGS=
+IMPLEMENTER_TIMEOUT_MS=3600000
+
+# Tester Agent
+TESTER_COMMAND=cursor-agent
+TESTER_ARGS=
+TESTER_TIMEOUT_MS=3600000
+
+# Reviewer Agent
+REVIEWER_COMMAND=codex
+REVIEWER_ARGS=
+REVIEWER_TIMEOUT_MS=3600000
+
+# Pipeline Configuration
+REVIEW_LOOP_ENABLED=true
+REVIEW_LOOP_MAX_LOOPS=3
+```
+
+**ข้อดี**: ไม่ต้องแก้ไขโค้ด, ง่ายต่อการจัดการหลาย environment
+
+### วิธีที่ 2: แก้ไข agentConfig.js โดยตรง
+
+แก้ไขไฟล์ `agents/agentConfig.js` เพื่อปรับแต่ง:
 
 ```javascript
 agents: {
@@ -97,20 +141,28 @@ agents: {
 }
 ```
 
-### Review Loop
+### Environment Variables ที่รองรับ
 
-```javascript
-pipeline: {
-  reviewLoop: {
-    enabled: true,   // เปิด/ปิด review loop
-    maxLoops: 3,     // จำนวนรอบสูงสุด
-  },
-}
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PLANNER_COMMAND` | Command สำหรับ Planner agent | `gemini` |
+| `PLANNER_ARGS` | Arguments สำหรับ Planner (space-separated) | `` |
+| `PLANNER_TIMEOUT_MS` | Timeout ใน milliseconds | `3600000` |
+| `IMPLEMENTER_COMMAND` | Command สำหรับ Implementer agent | `cursor-agent` |
+| `IMPLEMENTER_ARGS` | Arguments สำหรับ Implementer | `` |
+| `IMPLEMENTER_TIMEOUT_MS` | Timeout ใน milliseconds | `3600000` |
+| `TESTER_COMMAND` | Command สำหรับ Tester agent | `cursor-agent` |
+| `TESTER_ARGS` | Arguments สำหรับ Tester | `` |
+| `TESTER_TIMEOUT_MS` | Timeout ใน milliseconds | `3600000` |
+| `REVIEWER_COMMAND` | Command สำหรับ Reviewer agent | `codex` |
+| `REVIEWER_ARGS` | Arguments สำหรับ Reviewer | `` |
+| `REVIEWER_TIMEOUT_MS` | Timeout ใน milliseconds | `3600000` |
+| `REVIEW_LOOP_ENABLED` | เปิด/ปิด review loop | `true` |
+| `REVIEW_LOOP_MAX_LOOPS` | จำนวนรอบสูงสุด | `3` |
 
 ### System Prompts
 
-แก้ไข `systemPrompt` ในแต่ละ agent เพื่อปรับแต่งพฤติกรรม:
+System prompts ยังคงอยู่ใน `agentConfig.js` (ยังไม่รองรับ environment variables) แก้ไขได้โดยตรง:
 
 ```javascript
 planner: {

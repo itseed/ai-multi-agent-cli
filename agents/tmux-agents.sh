@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
 SESSION_NAME="ai-agents"
-PROJECT_DIR="$(pwd)"
 
-# TODO: แก้ให้ตรงกับ CLI จริง
-CMD_PLANNER="gemini"
-CMD_IMPLEMENTER="cursor-agent"
-CMD_TESTER="cursor-agent"
-CMD_REVIEWER="codex"
+# Load environment variables from .env if exists
+if [ -f .env ]; then
+  export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# Use TARGET_PROJECT_ROOT if set, otherwise use current directory
+PROJECT_DIR="${TARGET_PROJECT_ROOT:-$(pwd)}"
+
+# Use environment variables with defaults
+CMD_PLANNER="${PLANNER_COMMAND:-gemini}"
+CMD_IMPLEMENTER="${IMPLEMENTER_COMMAND:-cursor-agent}"
+CMD_TESTER="${TESTER_COMMAND:-cursor-agent}"
+CMD_REVIEWER="${REVIEWER_COMMAND:-codex}"
 
 # ตรวจสอบว่า tmux ติดตั้งแล้วหรือยัง
 if ! command -v tmux &> /dev/null; then

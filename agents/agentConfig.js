@@ -1,12 +1,38 @@
 // agents/agentConfig.js
 const { PLAN_FILE, REVIEW_FILE, TEST_REPORT_FILE } = require('../lib/paths');
 
+// Helper function to get env var with default
+function getEnv(key, defaultValue) {
+  return process.env[key] !== undefined ? process.env[key] : defaultValue;
+}
+
+// Helper function to parse args from env (space-separated string)
+function parseArgs(envValue, defaultValue = []) {
+  if (!envValue || envValue.trim() === '') {
+    return defaultValue;
+  }
+  return envValue.trim().split(/\s+/).filter(arg => arg.length > 0);
+}
+
+// Helper function to parse boolean from env
+function parseBool(envValue, defaultValue = false) {
+  if (envValue === undefined) return defaultValue;
+  return envValue.toLowerCase() === 'true' || envValue === '1';
+}
+
+// Helper function to parse number from env
+function parseNumber(envValue, defaultValue) {
+  if (envValue === undefined) return defaultValue;
+  const num = parseInt(envValue, 10);
+  return isNaN(num) ? defaultValue : num;
+}
+
 module.exports = {
   pipeline: {
     steps: ['planner', 'implementer', 'tester', 'reviewer'],
     reviewLoop: {
-      enabled: true,
-      maxLoops: 3,
+      enabled: parseBool(getEnv('REVIEW_LOOP_ENABLED', 'true')),
+      maxLoops: parseNumber(getEnv('REVIEW_LOOP_MAX_LOOPS', '3'), 3),
     },
   },
 
@@ -18,12 +44,12 @@ module.exports = {
       statusKey: 'planner',
 
       type: 'cli',
-      command: 'gemini',    // TODO: แก้เป็นคำสั่ง CLI ของคุณ
-      defaultArgs: [],      // เช่น ['chat', '--model', 'gemini-2.0-pro']
-      timeoutMs: 60 * 60 * 1000,
+      command: getEnv('PLANNER_COMMAND', 'gemini'),
+      defaultArgs: parseArgs(getEnv('PLANNER_ARGS', '')),
+      timeoutMs: parseNumber(getEnv('PLANNER_TIMEOUT_MS', '3600000'), 60 * 60 * 1000),
 
-      provider: 'google',
-      model: 'gemini-2.0-pro',
+      provider: getEnv('PLANNER_PROVIDER', 'google'),
+      model: getEnv('PLANNER_MODEL', 'gemini-2.0-pro'),
 
       io: {
         reads: [],
@@ -50,12 +76,12 @@ module.exports = {
       statusKey: 'implementer',
 
       type: 'cli',
-      command: 'cursor-agent',  // TODO: แก้เป็น cursor CLI จริง
-      defaultArgs: [],
-      timeoutMs: 60 * 60 * 1000,
+      command: getEnv('IMPLEMENTER_COMMAND', 'cursor-agent'),
+      defaultArgs: parseArgs(getEnv('IMPLEMENTER_ARGS', '')),
+      timeoutMs: parseNumber(getEnv('IMPLEMENTER_TIMEOUT_MS', '3600000'), 60 * 60 * 1000),
 
-      provider: 'cursor',
-      model: 'gpt-4.1',
+      provider: getEnv('IMPLEMENTER_PROVIDER', 'cursor'),
+      model: getEnv('IMPLEMENTER_MODEL', 'gpt-4.1'),
 
       io: {
         reads: [PLAN_FILE, REVIEW_FILE],
@@ -79,12 +105,12 @@ module.exports = {
       statusKey: 'tester',
 
       type: 'cli',
-      command: 'cursor-agent',  // หรือ codex / ai-cli ตัวอื่นตามที่คุณใช้
-      defaultArgs: [],
-      timeoutMs: 60 * 60 * 1000,
+      command: getEnv('TESTER_COMMAND', 'cursor-agent'),
+      defaultArgs: parseArgs(getEnv('TESTER_ARGS', '')),
+      timeoutMs: parseNumber(getEnv('TESTER_TIMEOUT_MS', '3600000'), 60 * 60 * 1000),
 
-      provider: 'cursor',
-      model: 'gpt-4.1',
+      provider: getEnv('TESTER_PROVIDER', 'cursor'),
+      model: getEnv('TESTER_MODEL', 'gpt-4.1'),
 
       io: {
         reads: [PLAN_FILE, 'src/**'],
@@ -108,12 +134,12 @@ module.exports = {
       statusKey: 'reviewer',
 
       type: 'cli',
-      command: 'codex',     // TODO: แก้เป็น Codex CLI จริง
-      defaultArgs: [],
-      timeoutMs: 60 * 60 * 1000,
+      command: getEnv('REVIEWER_COMMAND', 'codex'),
+      defaultArgs: parseArgs(getEnv('REVIEWER_ARGS', '')),
+      timeoutMs: parseNumber(getEnv('REVIEWER_TIMEOUT_MS', '3600000'), 60 * 60 * 1000),
 
-      provider: 'openai',
-      model: 'gpt-4.1',
+      provider: getEnv('REVIEWER_PROVIDER', 'openai'),
+      model: getEnv('REVIEWER_MODEL', 'gpt-4.1'),
 
       io: {
         reads: [PLAN_FILE, 'src/**'],
