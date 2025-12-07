@@ -1,0 +1,9 @@
+{
+  "name": "ai-multi-agent-cli",
+  "version": "1.0.0",
+  "main": "orchestrator.js",
+  "type": "commonjs",
+  "scripts": {
+    "orch": "node orchestrator.js"
+  }
+}
