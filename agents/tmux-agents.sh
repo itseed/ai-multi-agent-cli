@@ -51,5 +51,13 @@ tmux split-window -v -t "$SESSION_NAME:0.1" -c "$PROJECT_DIR" \
 
 tmux select-layout -t "$SESSION_NAME:0" tiled
 
+# Enable mouse support for easier pane navigation
+# Try modern syntax first (tmux 2.1+), fallback to older syntax
+tmux set -g mouse on 2>/dev/null || \
+tmux set -g mouse-mode on 2>/dev/null || \
+tmux set -g mouse-utf8 on 2>/dev/null || \
+echo "Note: Could not enable mouse support (may need manual config)"
+
 echo "Agents started in tmux session: $SESSION_NAME"
+echo "Mouse support enabled - you can click to switch panes"
 tmux attach -t "$SESSION_NAME"
